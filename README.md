@@ -4,7 +4,7 @@
 # Doto
 A primitive CLI tool telling you what to do.
 
-The name comes from either "**Do** **to**day" and is also an anagram of "Todo".
+The name comes from either "**Do** **to**day" or the anagram of "Todo", up to you.
 
 ## Usage
 You can pass a custom config file path with the `DOTO_CONFIG` environment flag:

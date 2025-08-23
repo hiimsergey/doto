@@ -3,7 +3,7 @@ const std = @import("std");
 
 const config = @import("config.zig");
 const entry = @import("entry.zig");
-const slots = @import("slots.zig");
+const slot = @import("slot.zig");
 
 const AllocatorWrapper = @import("allocator.zig").AllocatorWrapper;
 const ArrayList = std.ArrayList;
