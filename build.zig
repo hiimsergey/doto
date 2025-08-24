@@ -1,5 +1,3 @@
-const constants = @import("src/constants.zig");
-
 const Build = @import("std").Build;
 
 // Latest Zig version as of writing this: 0.14.1
@@ -10,8 +8,8 @@ pub fn build(b: *Build) void {
 
 	// Executable declaration
 	const exe = b.addExecutable(.{
-		.name = constants.EXECUTABLE,
-		.root_source_file = b.path("src/main.zig"),
+		.name = "doto",
+		.root_source_file = b.path("doto.zig"),
 		.target = target,
 		.optimize = optimize
 	});
