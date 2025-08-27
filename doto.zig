@@ -42,7 +42,17 @@ const MAX_TASKS: u8 = blk: {
 		@as(f32, @floatFromInt(PERIOD))
 	));
 };
+
 const Buffer = [PERIOD][MAX_TASKS]?[]const u8;
+const BUFFER: Buffer = blk: {
+	var result: Buffer = .{ .{ null } ** MAX_TASKS } ** PERIOD;
+	for (CONFIG, 0..) |entry, i| {
+		const total_times = ENTRY_TIMES[i];
+		const step = @divFloor(PERIOD, total_times);
+		for (0..total_times) |time| put_entry(&result, entry.@"0", time * step);
+	}
+	break :blk result;
+};
 
 const FMT_BLACK  = "\x1b[30m";
 const FMT_YELLOW = "\x1b[33m";
@@ -55,6 +65,33 @@ inline fn println(comptime fmt: []const u8, args: anytype) void {
 	out.print(fmt ++ "\n", args) catch {};
 }
 
+// Tries to put the `entry` the day at index `target_day`. If all slots, of which there
+// are `MAX_TASKS`, are full, it finds the day with the lowest number of entries and
+// the lowest day index and puts it there. There will always be a free slot for the entry.
+inline fn put_entry(buf: *Buffer, entry: []const u8, target_day: u16) void {
+	for (0..MAX_TASKS) |task| {
+		if (buf[target_day][task] != null) continue;
+		buf[target_day][task] = entry;
+		return;
+	}
+	
+	var best_day: u16 = PERIOD;
+	var min_task_nr: u16 = MAX_TASKS;
+	inline for (0..PERIOD) |day| {
+		if (day == target_day) continue;
+		inline for (0..MAX_TASKS) |task| {
+			if (buf[day][task] != null) continue;
+			if (task < min_task_nr) {
+				best_day = day;
+				min_task_nr = task;
+			}
+			break;
+		}
+	}
+
+	buf[best_day][min_task_nr] = entry;
+}
+
 fn help() void {
 	println(
 		\\Usage:
@@ -65,8 +102,6 @@ fn help() void {
 }
 
 pub fn main() u8 {
-	const buf: Buffer = comptime get_buffer();
-
 	var args = std.process.args();
 	defer args.deinit();
 
@@ -115,48 +150,11 @@ pub fn main() u8 {
 
 	for (range.from..range.to) |period_i| {
 		println(FMT_BLACK ++ "Day {d}/{d}" ++ FMT_NORMAL, .{period_i + 1, PERIOD});
-		for (buf[period_i]) |name| {
+		for (BUFFER[period_i]) |name| {
 			if (name == null) break;
 			println("{s}", .{name.?});
 		}
 	}
 
 	return 0;
-}
-
-fn get_buffer() Buffer {
-	var result: Buffer = .{ .{ null } ** MAX_TASKS } ** PERIOD;
-	for (CONFIG, 0..) |entry, i| {
-		const total_times = ENTRY_TIMES[i];
-		const step = @divFloor(PERIOD, total_times);
-		inline for (0..total_times) |time| put_entry(&result, entry.@"0", time * step);
-	}
-	return result;
-}
-
-// Tries to put the `entry` the day at index `target_day`. If all slots, of which there
-// are `MAX_TASKS`, are full, it finds the day with the lowest number of entries and
-// the lowest day index and puts it there. There will always be a free slot for the entry.
-inline fn put_entry(buf: *Buffer, entry: []const u8, target_day: u16) void {
-	for (0..MAX_TASKS) |task| {
-		if (buf[target_day][task] != null) continue;
-		buf[target_day][task] = entry;
-		return;
-	}
-	
-	var best_day: u16 = PERIOD;
-	var min_task_nr: u16 = MAX_TASKS;
-	inline for (0..PERIOD) |day| {
-		if (day == target_day) continue;
-		inline for (0..MAX_TASKS) |task| {
-			if (buf[day][task] != null) continue;
-			if (task < min_task_nr) {
-				best_day = day;
-				min_task_nr = task;
-			}
-			break;
-		}
-	}
-
-	buf[best_day][min_task_nr] = entry;
 }
